@@ -14,6 +14,7 @@ jobs:
         php-version: ['8.1', '8.2', '8.3', '8.4']
         include:
           - { php-version: '8.1', dependencies: '--prefer-lowest' }
+          - { php-version: '8.4', dependencies: '--prefer-stable', symfony-version: '^8.0' }
 
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +26,12 @@ jobs:
           coverage: xdebug
 
       - name: Install PHP dependencies
-        run: composer update --no-interaction ${{ matrix.dependencies }}
+        run: |
+          if [ "${{ matrix.symfony-version }}" != "" ]; then
+            composer require --dev --no-update symfony/framework-bundle:${{ matrix.symfony-version }} symfony/yaml:${{ matrix.symfony-version }}
+            composer require --no-update symfony/http-kernel:${{ matrix.symfony-version }} symfony/dependency-injection:${{ matrix.symfony-version }} symfony/config:${{ matrix.symfony-version }} symfony/validator:${{ matrix.symfony-version }}
+          fi
+          composer update --no-interaction ${{ matrix.dependencies }}
 
       - name: Run tests
         run: vendor/bin/phpunit
